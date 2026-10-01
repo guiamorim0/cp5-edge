@@ -1,0 +1,14 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+.env
+backend-python/app/triggers.json
+
+# Node
+node_modules/
+dist/
+
+# Sistema
+.DS_Store
+Thumbs.db

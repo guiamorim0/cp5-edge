@@ -1,0 +1,130 @@
+/* Mobile first: o app foi feito para ser usado no celular.
+   Em telas maiores os cards viram grade e o conteudo ganha largura maxima. */
+
+:root {
+  --fundo: #020617;
+  --superficie: #0f172a;
+  --borda: #1e293b;
+  --texto: #e2e8f0;
+  --suave: #94a3b8;
+  --primaria: #22c55e;
+  --perigo: #ef4444;
+  --alerta: #f97316;
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--fundo);
+  color: var(--texto);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+.app { max-width: 720px; margin: 0 auto; padding: 16px; }
+
+header h1 { font-size: 1.25rem; margin: 0; }
+.subtitulo { color: var(--suave); font-size: 0.8rem; margin: 4px 0 16px; }
+
+/* Abas */
+.abas { display: flex; gap: 8px; margin-bottom: 16px; }
+.abas button {
+  flex: 1;
+  padding: 12px 8px;
+  min-height: 44px;
+  border: 1px solid var(--borda);
+  background: var(--superficie);
+  color: var(--suave);
+  border-radius: 10px;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+.abas button.ativa { color: var(--texto); border-color: var(--primaria); }
+
+/* Avisos */
+.faixa-alerta, .faixa-erro {
+  padding: 12px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  font-weight: 600;
+  text-align: center;
+  animation: piscar 1s ease-in-out infinite;
+}
+.faixa-alerta { background: rgba(249, 115, 22, 0.15); color: var(--alerta); border: 1px solid var(--alerta); }
+.faixa-erro { background: rgba(239, 68, 68, 0.15); color: var(--perigo); border: 1px solid var(--perigo); animation: none; }
+
+@keyframes piscar { 50% { opacity: 0.45; } }
+
+/* Cards */
+.card {
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+.card.alerta { border-color: var(--alerta); }
+
+.cards { display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 12px; }
+@media (min-width: 600px) { .cards { grid-template-columns: repeat(3, 1fr); } }
+
+.sensor { display: flex; align-items: center; gap: 14px; margin-bottom: 0; }
+.sensor-icone { font-size: 1.8rem; }
+.sensor-titulo { color: var(--suave); font-size: 0.8rem; margin: 0; }
+.sensor-valor { font-size: 1.8rem; font-weight: 700; margin: 2px 0; }
+.sensor-unidade { font-size: 0.9rem; color: var(--suave); margin-left: 3px; }
+.sensor-faixa { color: var(--suave); font-size: 0.7rem; margin: 0; }
+
+/* Textos */
+.rotulo { color: var(--suave); font-size: 0.8rem; margin: 0 0 8px; }
+.rotulo.espaco { margin-top: 16px; }
+.estado { font-size: 1.3rem; font-weight: 700; margin: 0; color: var(--suave); }
+.estado.ligada { color: var(--primaria); }
+.atual { font-size: 0.8rem; color: var(--suave); margin: 0; }
+.vazio { color: var(--suave); font-size: 0.85rem; margin: 0; }
+.mensagem { text-align: center; color: var(--suave); font-size: 0.85rem; }
+.device-id { font-weight: 600; margin: 0; }
+.device-entidade { color: var(--suave); font-size: 0.75rem; margin: 2px 0 0; word-break: break-all; }
+
+.linha { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+
+/* Botoes: altura minima de 44px para uso com o dedo */
+.botao {
+  min-height: 44px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--borda);
+  background: #1e293b;
+  color: var(--texto);
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+.botao:disabled { opacity: 0.5; }
+.botao.primario { background: var(--primaria); border-color: var(--primaria); color: #052e16; font-weight: 700; }
+.botao.perigo { background: var(--perigo); border-color: var(--perigo); color: #fff; }
+.botao.grande { min-width: 120px; font-weight: 700; }
+.botao.largo { width: 100%; margin-bottom: 12px; }
+.botoes { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+
+/* Campos */
+.campo { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.campo.coluna { flex-direction: column; align-items: stretch; gap: 4px; }
+.campo label { color: var(--suave); font-size: 0.8rem; min-width: 60px; }
+.campo input[type="range"] { flex: 1; accent-color: var(--primaria); }
+.campo input[type="number"], .campo input[type="text"], .campo input:not([type]) {
+  width: 100%;
+  max-width: 90px;
+  min-height: 44px;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid var(--borda);
+  background: var(--fundo);
+  color: var(--texto);
+  font-size: 1rem;
+}
+.campo.coluna input { max-width: none; }
+
+footer { text-align: center; color: var(--suave); font-size: 0.75rem; padding: 24px 0 8px; }
