@@ -128,3 +128,27 @@ header h1 { font-size: 1.25rem; margin: 0; }
 .campo.coluna input { max-width: none; }
 
 footer { text-align: center; color: var(--suave); font-size: 0.75rem; padding: 24px 0 8px; }
+
+/* Filtros e medias do grafico */
+.filtros { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+.chip {
+  min-height: 36px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--borda);
+  background: transparent;
+  color: var(--suave);
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+.chip.ativo { background: rgba(148, 163, 184, 0.08); }
+.chip-media { opacity: 0.7; font-weight: 600; }
+.link {
+  background: none;
+  border: none;
+  color: var(--suave);
+  font-size: 0.75rem;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+}
