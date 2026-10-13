@@ -152,3 +152,110 @@ footer { text-align: center; color: var(--suave); font-size: 0.75rem; padding: 2
   cursor: pointer;
   padding: 0;
 }
+
+/* Historico de eventos */
+.resumo { display: flex; gap: 20px; }
+.resumo-numero { font-size: 1.6rem; font-weight: 700; margin: 0; }
+.resumo-rotulo { color: var(--suave); font-size: 0.7rem; margin: 0; }
+.evento-titulo { font-weight: 600; margin: 0 0 4px; }
+.evento-detalhe { color: var(--suave); font-size: 0.75rem; margin: 0; }
+.duracao {
+  font-size: 0.75rem;
+  color: var(--suave);
+  border: 1px solid var(--borda);
+  border-radius: 999px;
+  padding: 4px 10px;
+  white-space: nowrap;
+}
+.duracao.ativo { color: var(--alerta); border-color: var(--alerta); }
+
+/* Seletor de ambiente */
+.seletor { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.seletor label { color: var(--suave); font-size: 0.8rem; white-space: nowrap; }
+.seletor select {
+  flex: 1;
+  min-height: 44px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--borda);
+  background: var(--superficie);
+  color: var(--texto);
+  font-size: 0.95rem;
+}
+
+/* Abas: muitas agora, entao rolam na horizontal no celular */
+.abas { overflow-x: auto; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
+.abas::-webkit-scrollbar { display: none; }
+.abas button { flex: 0 0 auto; white-space: nowrap; }
+
+/* Indice de saude */
+.saude { display: flex; align-items: center; gap: 16px; }
+.saude-numero {
+  width: 68px;
+  height: 68px;
+  border: 3px solid;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.saude-classe { font-size: 1.1rem; font-weight: 600; margin: 2px 0; text-transform: capitalize; }
+
+/* Atuadores */
+.atuador-nome { font-size: 0.9rem; }
+.botoes-inline { display: flex; gap: 8px; }
+.botoes-inline .botao { padding: 8px 14px; }
+.linha.espacado { margin-bottom: 12px; }
+
+/* Simulacao */
+.explicacao { color: var(--suave); font-size: 0.8rem; line-height: 1.5; margin: 0 0 14px; }
+.cenarios { display: grid; grid-template-columns: 1fr; gap: 8px; margin-bottom: 14px; }
+@media (min-width: 600px) { .cenarios { grid-template-columns: repeat(2, 1fr); } }
+.cenario {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
+  min-height: 56px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--borda);
+  background: #1e293b;
+  color: var(--texto);
+  cursor: pointer;
+}
+.cenario.ativo { border-color: var(--alerta); }
+.cenario-titulo { font-size: 0.9rem; font-weight: 600; }
+.cenario-detalhe { font-size: 0.72rem; color: var(--suave); }
+
+/* Estoque de vinhos */
+.pill {
+  font-size: 0.72rem;
+  border: 1px solid var(--borda);
+  border-radius: 999px;
+  padding: 4px 10px;
+  white-space: nowrap;
+  color: var(--suave);
+}
+.pill.auto { color: var(--alerta); border-color: var(--alerta); }
+.estoque { display: flex; align-items: center; gap: 12px; }
+.estoque .botao { min-width: 44px; padding: 8px; font-size: 1.1rem; }
+.estoque-numero { font-size: 1.2rem; font-weight: 700; min-width: 44px; text-align: center; }
+.campo select {
+  flex: 1;
+  min-height: 44px;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid var(--borda);
+  background: var(--fundo);
+  color: var(--texto);
+  font-size: 1rem;
+}
+
+/* Log de comandos */
+.card.compacto { padding: 12px 16px; margin-bottom: 8px; }
+.comando-nome { font-family: ui-monospace, monospace; font-size: 0.85rem; margin: 0; }
+.falhou { color: var(--perigo); font-family: inherit; }

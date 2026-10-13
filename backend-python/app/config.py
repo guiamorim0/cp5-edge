@@ -16,11 +16,10 @@ class Settings(BaseSettings):
     fiware_service: str = "smart"
     fiware_servicepath: str = "/"
 
-    device_id: str = "lamp001"
-    entity_id: str = "urn:ngsi-ld:Lamp:001"
-    entity_type: str = "Lamp"
-
     api_port: int = 8000
+
+    # Banco de dados. SQLite por padrao: um arquivo ao lado da aplicacao.
+    database_url: str = "sqlite:///./vinheria.db"
 
     @property
     def orion_url(self) -> str:
@@ -44,7 +43,11 @@ class Settings(BaseSettings):
 
     @property
     def headers_json(self) -> dict:
-        """Headers para requisicoes com corpo. O Orion recusa Content-Type em GET e DELETE."""
+        """Headers para requisicoes com corpo.
+
+        O Orion recusa Content-Type em GET e DELETE, respondendo BadRequest,
+        entao o header so acompanha as chamadas que realmente enviam dados.
+        """
         return {**self.headers, "Content-Type": "application/json"}
 
 

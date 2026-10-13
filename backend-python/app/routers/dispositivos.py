@@ -1,28 +1,34 @@
-"""Rotas de cadastro e gerenciamento dos IoT Devices."""
+"""Rotas de cadastro e gerenciamento dos dispositivos."""
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
 
-from app.models import NovoDispositivo
-from app.services import fiware
+from app.database import get_db
+from app.models import DispositivoOut, NovoDispositivo
+from app.services import dispositivos as servico
 
 router = APIRouter(prefix="/api/devices", tags=["dispositivos"])
 
 
-@router.get("")
-async def listar():
-    """Dispositivos cadastrados no IoT Agent."""
-    return await fiware.listar_dispositivos()
+@router.get("", response_model=list[DispositivoOut])
+def listar(db: Session = Depends(get_db)):
+    """Dispositivos cadastrados."""
+    return servico.listar(db)
 
 
-@router.post("", status_code=201)
-async def cadastrar(dispositivo: NovoDispositivo):
-    """Cadastra um novo dispositivo ja com os comandos e atributos do firmware."""
-    return await fiware.cadastrar_dispositivo(
-        dispositivo.device_id, dispositivo.entity_name, dispositivo.entity_type
-    )
+@router.get("/padrao", response_model=DispositivoOut)
+def padrao(db: Session = Depends(get_db)):
+    """Dispositivo usado pelo dashboard quando nenhum foi escolhido."""
+    return servico.padrao(db)
 
 
-@router.delete("/{device_id}")
-async def remover(device_id: str):
-    """Remove o cadastro de um dispositivo."""
-    return await fiware.remover_dispositivo(device_id)
+@router.post("", response_model=DispositivoOut, status_code=201)
+async def cadastrar(dados: NovoDispositivo, db: Session = Depends(get_db)):
+    """Provisiona no FIWARE e cadastra no banco, com limites padrao de adega."""
+    return await servico.cadastrar(db, dados)
+
+
+@router.delete("/{dispositivo_id}")
+async def remover(dispositivo_id: int, db: Session = Depends(get_db)):
+    """Remove o dispositivo, seus limites, vinhos e historico."""
+    return await servico.remover(db, dispositivo_id)

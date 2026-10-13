@@ -1,72 +1,101 @@
-"""Guarda os limites configurados no dashboard e avalia as anomalias.
+"""Limites por dispositivo e a logica de alerta.
 
-Os triggers ficam num arquivo JSON ao lado da aplicacao. Assim eles
-sobrevivem a um restart da API, sem precisar de banco de dados.
+Cada dispositivo tem suas proprias faixas, porque cada ambiente guarda um
+tipo de vinho com exigencias diferentes. Quando um valor sai da faixa, esta
+camada faz tres coisas: aciona o alerta visual e sonoro, liga o atuador que
+corrige o problema, e registra o incidente.
 """
 
-import json
-from pathlib import Path
+from sqlalchemy.orm import Session
 
-from app.models import Leitura, ResultadoAlerta, Triggers
-from app.services import fiware
+from app.models import FAIXAS_PADRAO, FaixaTrigger, Leitura, ResultadoAlerta, Triggers
+from app.schema import Dispositivo, Trigger
+from app.services import comandos, eventos, fiware
 
-ARQUIVO = Path(__file__).resolve().parent.parent / "triggers.json"
+# Ordem de prioridade: o ESP32 mantem um alerta por vez, entao a anomalia
+# mais critica para a conservacao do vinho e a que soa.
+PRIORIDADE = ("temperature", "humidity", "luminosity")
+
+NOMES = {
+    "temperature": "temperatura",
+    "humidity": "umidade",
+    "luminosity": "luminosidade",
+}
+
+# Atuador que desliga quando o ambiente normaliza
+DESLIGA_ATUADOR = {"acon": "acoff", "umidon": "umidoff", "luz0": "luz1"}
 
 
-def ler_triggers() -> Triggers:
-    """Le os limites do arquivo. Se nao existir, usa os valores padrao."""
-    if not ARQUIVO.exists():
-        return Triggers()
-    try:
-        return Triggers(**json.loads(ARQUIVO.read_text(encoding="utf-8")))
-    except (json.JSONDecodeError, ValueError):
-        # Arquivo corrompido: volta ao padrao em vez de derrubar a API
-        return Triggers()
+def ler(db: Session, dispositivo_id: int) -> Triggers:
+    """Limites configurados de um dispositivo, com os padroes como reserva."""
+    faixas = {}
+    for registro in db.query(Trigger).filter(Trigger.dispositivo_id == dispositivo_id).all():
+        faixas[registro.grandeza] = FaixaTrigger(minimo=registro.minimo, maximo=registro.maximo)
+
+    for grandeza, (minimo, maximo) in FAIXAS_PADRAO.items():
+        faixas.setdefault(grandeza, FaixaTrigger(minimo=minimo, maximo=maximo))
+
+    return Triggers(**faixas)
 
 
-def salvar_triggers(triggers: Triggers) -> Triggers:
-    """Grava os limites definidos pelo usuario."""
-    ARQUIVO.write_text(triggers.model_dump_json(indent=2), encoding="utf-8")
-    return triggers
+def salvar(db: Session, dispositivo_id: int, novos: Triggers) -> Triggers:
+    """Grava os limites definidos pelo usuario para este dispositivo."""
+    for grandeza in FAIXAS_PADRAO:
+        faixa: FaixaTrigger = getattr(novos, grandeza)
+        registro = (
+            db.query(Trigger)
+            .filter(Trigger.dispositivo_id == dispositivo_id, Trigger.grandeza == grandeza)
+            .first()
+        )
+        if registro is None:
+            registro = Trigger(dispositivo_id=dispositivo_id, grandeza=grandeza)
+            db.add(registro)
+        registro.minimo = faixa.minimo
+        registro.maximo = faixa.maximo
+
+    db.commit()
+    return ler(db, dispositivo_id)
 
 
 def detectar_anomalia(leitura: Leitura, triggers: Triggers) -> str | None:
-    """Compara a leitura com os limites e devolve a primeira grandeza fora da faixa.
-
-    A ordem importa: temperatura tem prioridade sobre umidade, que tem
-    prioridade sobre luminosidade. O ESP32 mantem um alerta por vez, entao
-    a anomalia mais critica para a vinheria e a que soa.
-    """
-    for grandeza in ("temperature", "humidity", "luminosity"):
+    """Primeira grandeza fora da faixa, na ordem de prioridade."""
+    for grandeza in PRIORIDADE:
         valor = getattr(leitura, grandeza)
         if valor is None:
             continue
-        faixa = getattr(triggers, grandeza)
+        faixa: FaixaTrigger = getattr(triggers, grandeza)
         if valor < faixa.minimo or valor > faixa.maximo:
             return grandeza
     return None
 
 
-async def avaliar_e_acionar(leitura: Leitura) -> ResultadoAlerta:
-    """Dispara ou encerra o alerta no ESP32 conforme os triggers.
+async def avaliar_e_acionar(
+    db: Session, dispositivo: Dispositivo, leitura: Leitura
+) -> ResultadoAlerta:
+    """Compara a leitura com os limites e age sobre o ambiente.
 
-    E aqui que o front-end "ativa" o alerta: o dashboard chama esta rota a
-    cada leitura, e o comando so e enviado quando o estado muda, para nao
-    encher o broker de mensagens repetidas.
+    E aqui que o front-end "aciona" o alerta: o dashboard chama esta rota a
+    cada leitura, e os comandos so sao enviados quando o estado muda, para
+    nao encher o broker de mensagens repetidas.
     """
-    triggers = ler_triggers()
+    triggers = ler(db, dispositivo.id)
     anomalia = detectar_anomalia(leitura, triggers)
     alerta_no_device = leitura.alert  # o que o ESP32 informou estar ativo
 
-    nomes = {
-        "temperature": "temperatura",
-        "humidity": "umidade",
-        "luminosity": "luminosidade",
-    }
-
     if anomalia is None:
         if alerta_no_device != "normal":
-            await fiware.enviar_comando("alertoff")
+            await comandos.enviar(db, dispositivo, "alertoff", origem="automatico")
+
+            # Desliga o atuador que estava corrigindo o ambiente
+            evento = eventos.em_aberto(db, dispositivo.id)
+            if evento is not None:
+                atuador = fiware.ATUADOR_POR_GRANDEZA.get(evento.grandeza)
+                if atuador and atuador in DESLIGA_ATUADOR:
+                    await comandos.enviar(
+                        db, dispositivo, DESLIGA_ATUADOR[atuador], origem="automatico"
+                    )
+
+            eventos.encerrar(db, dispositivo.id)
             return ResultadoAlerta(
                 anomalia=None,
                 comando_enviado="alertoff",
@@ -74,16 +103,25 @@ async def avaliar_e_acionar(leitura: Leitura) -> ResultadoAlerta:
             )
         return ResultadoAlerta(anomalia=None, mensagem="Todos os valores dentro dos limites")
 
-    if nomes[anomalia] == alerta_no_device:
+    if NOMES[anomalia] == alerta_no_device:
         return ResultadoAlerta(
             anomalia=anomalia,
-            mensagem=f"Alerta de {nomes[anomalia]} ja esta ativo no dispositivo",
+            mensagem=f"Alerta de {NOMES[anomalia]} ja esta ativo no dispositivo",
         )
 
     comando = fiware.COMANDO_POR_GRANDEZA[anomalia]
-    await fiware.enviar_comando(comando)
+    await comandos.enviar(db, dispositivo, comando, origem="automatico")
+
+    # Alem de avisar, o sistema age: liga o atuador que corrige a anomalia
+    atuador = fiware.ATUADOR_POR_GRANDEZA.get(anomalia)
+    if atuador:
+        await comandos.enviar(db, dispositivo, atuador, origem="automatico")
+
+    faixa: FaixaTrigger = getattr(triggers, anomalia)
+    eventos.abrir(db, dispositivo, anomalia, getattr(leitura, anomalia), faixa.minimo, faixa.maximo)
+
     return ResultadoAlerta(
         anomalia=anomalia,
         comando_enviado=comando,
-        mensagem=f"Valor de {nomes[anomalia]} fora dos limites, alerta acionado",
+        mensagem=f"Valor de {NOMES[anomalia]} fora dos limites, alerta e atuador acionados",
     )

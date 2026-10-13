@@ -1,16 +1,27 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import ActuatorPanel from './components/ActuatorPanel'
+import DeviceSelector from './components/DeviceSelector'
 import DevicesPanel from './components/DevicesPanel'
+import EventsPanel from './components/EventsPanel'
+import HealthBadge from './components/HealthBadge'
 import HistoryChart from './components/HistoryChart'
 import LampControl from './components/LampControl'
+import ReportsPanel from './components/ReportsPanel'
 import SensorCard from './components/SensorCard'
+import SimulationPanel from './components/SimulationPanel'
 import TriggersPanel from './components/TriggersPanel'
-import { getTriggers } from './api'
+import WinesPanel from './components/WinesPanel'
+import { getDispositivos, getTriggers } from './api'
 import { useMonitoramento } from './hooks/useMonitoramento'
 
 const ABAS = [
-  { id: 'dashboard', titulo: 'Dashboard' },
+  { id: 'dashboard', titulo: 'Painel' },
   { id: 'triggers', titulo: 'Limites' },
-  { id: 'devices', titulo: 'Dispositivos' },
+  { id: 'vinhos', titulo: 'Vinhos' },
+  { id: 'eventos', titulo: 'Eventos' },
+  { id: 'relatorios', titulo: 'Relatorios' },
+  { id: 'simulacao', titulo: 'Simulacao' },
+  { id: 'devices', titulo: 'Ambientes' },
 ]
 
 const NOMES_ALERTA = {
@@ -21,15 +32,36 @@ const NOMES_ALERTA = {
 
 export default function App() {
   const [aba, setAba] = useState('dashboard')
+  const [dispositivos, setDispositivos] = useState([])
+  const [dispositivoId, setDispositivoId] = useState(null)
   const [triggers, setTriggers] = useState(null)
-  const { status, historico, erro, carregando, atualizar } = useMonitoramento()
 
-  // Os limites tambem sao usados pelos cards, para destacar o valor fora da faixa
+  const { status, historico, saude, erro, carregando, atualizar } = useMonitoramento(dispositivoId)
+
+  // Carrega a lista de ambientes e seleciona o primeiro
+  const carregarDispositivos = useCallback(async (lista) => {
+    const dados = lista ?? (await getDispositivos().catch(() => []))
+    setDispositivos(dados)
+    setDispositivoId((atual) => {
+      if (atual && dados.some((d) => d.id === atual)) return atual
+      return dados[0]?.id ?? null
+    })
+  }, [])
+
   useEffect(() => {
-    getTriggers().then(setTriggers).catch(() => setTriggers(null))
-  }, [aba])
+    carregarDispositivos()
+  }, [carregarDispositivos])
+
+  // Os limites tambem alimentam os cards, para destacar o valor fora da faixa
+  useEffect(() => {
+    if (!dispositivoId) return
+    getTriggers(dispositivoId)
+      .then(setTriggers)
+      .catch(() => setTriggers(null))
+  }, [dispositivoId, aba])
 
   const alertaAtivo = status?.alert && status.alert !== 'normal' ? status.alert : null
+  const semDispositivos = dispositivos.length === 0
 
   return (
     <div className="app">
@@ -39,6 +71,12 @@ export default function App() {
           {erro ? 'Sem conexao com a API' : carregando ? 'Carregando...' : 'Atualizando a cada 5s'}
         </p>
       </header>
+
+      <DeviceSelector
+        dispositivos={dispositivos}
+        selecionado={dispositivoId}
+        aoSelecionar={setDispositivoId}
+      />
 
       <nav className="abas">
         {ABAS.map((item) => (
@@ -54,27 +92,48 @@ export default function App() {
 
       {/* O aviso aparece em qualquer aba: o polling nao para ao trocar de tela */}
       {alertaAtivo && (
-        <div className="faixa-alerta">
-          {NOMES_ALERTA[alertaAtivo] || `Alerta: ${alertaAtivo}`}
-        </div>
+        <div className="faixa-alerta">{NOMES_ALERTA[alertaAtivo] || `Alerta: ${alertaAtivo}`}</div>
       )}
       {erro && <div className="faixa-erro">{erro}</div>}
 
+      {semDispositivos && aba !== 'devices' && (
+        <div className="card">
+          <p className="rotulo">Nenhum ambiente cadastrado</p>
+          <p className="explicacao">
+            Cadastre o primeiro ambiente na aba Ambientes. Ele sera provisionado no
+            FIWARE com todos os comandos e ja nasce com os limites de adega.
+          </p>
+          <button className="botao primario largo" onClick={() => setAba('devices')}>
+            Ir para Ambientes
+          </button>
+        </div>
+      )}
+
       <main>
-        {aba === 'dashboard' && (
+        {aba === 'dashboard' && !semDispositivos && (
           <>
+            <HealthBadge saude={saude} />
             <div className="cards">
               <SensorCard titulo="Temperatura" valor={status?.temperature} unidade="C" faixa={triggers?.temperature} icone="🌡" />
               <SensorCard titulo="Umidade" valor={status?.humidity} unidade="%" faixa={triggers?.humidity} icone="💧" />
               <SensorCard titulo="Luminosidade" valor={status?.luminosity} unidade="%" faixa={triggers?.luminosity} icone="☀" />
             </div>
-            <LampControl status={status} aoMudar={atualizar} />
+            <LampControl status={status} dispositivoId={dispositivoId} aoMudar={atualizar} />
+            <ActuatorPanel dispositivoId={dispositivoId} aoMudar={atualizar} />
             <HistoryChart dados={historico} />
           </>
         )}
 
-        {aba === 'triggers' && <TriggersPanel status={status} aoSalvar={atualizar} />}
-        {aba === 'devices' && <DevicesPanel />}
+        {aba === 'triggers' && !semDispositivos && (
+          <TriggersPanel status={status} dispositivoId={dispositivoId} aoSalvar={atualizar} />
+        )}
+        {aba === 'vinhos' && !semDispositivos && <WinesPanel dispositivoId={dispositivoId} />}
+        {aba === 'eventos' && !semDispositivos && <EventsPanel dispositivoId={dispositivoId} />}
+        {aba === 'relatorios' && <ReportsPanel dispositivoId={dispositivoId} />}
+        {aba === 'simulacao' && !semDispositivos && (
+          <SimulationPanel dispositivoId={dispositivoId} aoMudar={atualizar} />
+        )}
+        {aba === 'devices' && <DevicesPanel aoMudarLista={carregarDispositivos} />}
       </main>
 
       <footer>Grupo PentaCode · Turma 1ESPH · FIAP</footer>

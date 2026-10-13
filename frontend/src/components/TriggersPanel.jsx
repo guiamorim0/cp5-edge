@@ -12,14 +12,16 @@ const GRANDEZAS = [
  * apresentacao) e campo numerico (preciso), e mostra o valor atual do sensor
  * ao lado, para dar para ver o momento em que ele sai da faixa.
  */
-export default function TriggersPanel({ status, aoSalvar }) {
+export default function TriggersPanel({ status, dispositivoId, aoSalvar }) {
   const [triggers, setTriggers] = useState(null)
   const [salvando, setSalvando] = useState(false)
   const [mensagem, setMensagem] = useState(null)
 
   useEffect(() => {
-    getTriggers().then(setTriggers).catch(() => setMensagem('Nao foi possivel carregar os limites'))
-  }, [])
+    getTriggers(dispositivoId)
+      .then(setTriggers)
+      .catch(() => setMensagem('Nao foi possivel carregar os limites'))
+  }, [dispositivoId])
 
   function alterar(chave, campo, valor) {
     setTriggers((anterior) => ({
@@ -31,7 +33,7 @@ export default function TriggersPanel({ status, aoSalvar }) {
   async function salvar() {
     setSalvando(true)
     try {
-      await salvarTriggers(triggers)
+      await salvarTriggers(triggers, dispositivoId)
       // Avalia na hora: esperar o proximo polling daria impressao de nao ter funcionado
       await aoSalvar()
       setMensagem('Limites salvos')
