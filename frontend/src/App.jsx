@@ -5,6 +5,7 @@ import DevicesPanel from './components/DevicesPanel'
 import EventsPanel from './components/EventsPanel'
 import HealthBadge from './components/HealthBadge'
 import HistoryChart from './components/HistoryChart'
+import { IconeLuminosidade, IconeMarca, IconeTemperatura, IconeUmidade } from './components/Icons'
 import LampControl from './components/LampControl'
 import ReportsPanel from './components/ReportsPanel'
 import SensorCard from './components/SensorCard'
@@ -66,10 +67,17 @@ export default function App() {
   return (
     <div className="app">
       <header>
-        <h1>Monitoramento de Vinherias</h1>
-        <p className="subtitulo">
-          {erro ? 'Sem conexao com a API' : carregando ? 'Carregando...' : 'Atualizando a cada 5s'}
-        </p>
+        <div className="marca">
+          <div className="marca-icone"><IconeMarca /></div>
+          <div>
+            <h1>Monitoramento de Vinherias</h1>
+            {/* A bolinha repete em cor o que o texto diz, para ler de relance */}
+            <p className="subtitulo">
+              <span className={`ponto ${erro ? 'offline' : carregando ? 'carregando' : ''}`} />
+              {erro ? 'Sem conexao com a API' : carregando ? 'Carregando...' : 'Atualizando a cada 5s'}
+            </p>
+          </div>
+        </div>
       </header>
 
       <DeviceSelector
@@ -114,9 +122,9 @@ export default function App() {
           <>
             <HealthBadge saude={saude} />
             <div className="cards">
-              <SensorCard titulo="Temperatura" valor={status?.temperature} unidade="C" faixa={triggers?.temperature} icone="🌡" />
-              <SensorCard titulo="Umidade" valor={status?.humidity} unidade="%" faixa={triggers?.humidity} icone="💧" />
-              <SensorCard titulo="Luminosidade" valor={status?.luminosity} unidade="%" faixa={triggers?.luminosity} icone="☀" />
+              <SensorCard titulo="Temperatura" valor={status?.temperature} unidade="C" faixa={triggers?.temperature} icone={<IconeTemperatura />} />
+              <SensorCard titulo="Umidade" valor={status?.humidity} unidade="%" faixa={triggers?.humidity} icone={<IconeUmidade />} />
+              <SensorCard titulo="Luminosidade" valor={status?.luminosity} unidade="%" faixa={triggers?.luminosity} icone={<IconeLuminosidade />} />
             </div>
             <LampControl status={status} dispositivoId={dispositivoId} aoMudar={atualizar} />
             <ActuatorPanel dispositivoId={dispositivoId} aoMudar={atualizar} />
