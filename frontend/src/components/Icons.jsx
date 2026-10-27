@@ -55,3 +55,74 @@ export function IconeMarca(props) {
     </svg>
   )
 }
+
+/* ---------- Icones do menu lateral ----------
+   Mesma grade e traco dos de cima, para o menu parecer um conjunto so. */
+
+export function IconePainel(props) {
+  return (
+    <svg {...base} {...props}>
+      <rect x="3" y="3" width="7.5" height="7.5" rx="1.5" />
+      <rect x="13.5" y="3" width="7.5" height="4.5" rx="1.5" />
+      <rect x="13.5" y="10.5" width="7.5" height="10.5" rx="1.5" />
+      <rect x="3" y="13.5" width="7.5" height="7.5" rx="1.5" />
+    </svg>
+  )
+}
+
+export function IconeLimites(props) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M4 7h16M4 12h16M4 17h16" />
+      <circle cx="9" cy="7" r="2.2" />
+      <circle cx="15" cy="12" r="2.2" />
+      <circle cx="8" cy="17" r="2.2" />
+    </svg>
+  )
+}
+
+export function IconeVinhos(props) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M8 3h8l-.6 4.4a3.5 3.5 0 0 1-6.8 0L8 3Z" />
+      <path d="M12 11.5V19M9 19h6" />
+    </svg>
+  )
+}
+
+export function IconeEventos(props) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M12 8.5v4.5M12 16.2v.3" />
+      <path d="M10.3 3.9 2.6 17.2A1.9 1.9 0 0 0 4.3 20h15.4a1.9 1.9 0 0 0 1.7-2.8L13.7 3.9a1.9 1.9 0 0 0-3.4 0Z" />
+    </svg>
+  )
+}
+
+export function IconeRelatorios(props) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5Z" />
+      <path d="M14 3v5h5M9 13h6M9 17h4" />
+    </svg>
+  )
+}
+
+export function IconeSimulacao(props) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M9.5 3h5M12 3v4.2L6.6 17.4A2.4 2.4 0 0 0 8.7 21h6.6a2.4 2.4 0 0 0 2.1-3.6L12 7.2" />
+      <path d="M8.4 14h7.2" />
+    </svg>
+  )
+}
+
+export function IconeAmbientes(props) {
+  return (
+    <svg {...base} {...props}>
+      <rect x="3" y="4" width="18" height="6" rx="2" />
+      <rect x="3" y="14" width="18" height="6" rx="2" />
+      <path d="M7 7h.01M7 17h.01" />
+    </svg>
+  )
+}

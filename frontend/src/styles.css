@@ -49,12 +49,67 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-.app {
-  max-width: 760px;
-  margin: 0 auto;
-  padding: 20px 16px 8px;
+/* ---------- Estrutura: menu a esquerda, conteudo a direita ----------
+   No celular a coluna vira linha: o menu sobe para o topo e rola na
+   horizontal, porque uma barra lateral fixa comeria metade da tela. */
+
+.layout { display: flex; min-height: 100vh; }
+
+.lateral {
+  width: 250px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 20px 14px;
   padding-top: calc(20px + env(safe-area-inset-top, 0px));
+  padding-left: max(14px, env(safe-area-inset-left, 0px));
+  border-right: 1px solid var(--borda);
+  background: var(--superficie);
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+/* O conteudo nao encosta na barra: fica centrado no espaco que sobra,
+   com largura maxima para a linha de texto nao ficar longa demais. */
+.conteudo {
+  flex: 1;
+  min-width: 0;             /* deixa tabelas e graficos encolherem */
+  width: 100%;
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 28px 32px 8px;
+  padding-right: max(32px, env(safe-area-inset-right, 0px));
   padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+}
+
+.topo { margin-bottom: 20px; }
+.topo h2 {
+  font-size: 1.3rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+.topo p { color: var(--suave); font-size: 0.85rem; margin: 4px 0 0; }
+
+@media (max-width: 860px) {
+  .layout { flex-direction: column; }
+  .lateral {
+    width: auto;
+    height: auto;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    gap: 12px;
+    padding: 14px 16px 10px;
+    padding-top: calc(14px + env(safe-area-inset-top, 0px));
+    border-right: none;
+    border-bottom: 1px solid var(--borda);
+  }
+  .conteudo { padding: 18px 16px 8px; padding-right: max(16px, env(safe-area-inset-right, 0px)); max-width: none; }
+  .lateral footer { display: none; }   /* a creditacao volta no fim da pagina */
 }
 
 /* Acessibilidade: foco visivel so no teclado, nunca no toque */
@@ -66,9 +121,8 @@ button, select, input { font-family: inherit; }
 
 /* ---------- Cabecalho ---------- */
 
-header { margin-bottom: 20px; }
-
-.marca { display: flex; align-items: center; gap: 12px; }
+.marca { display: flex; align-items: center; gap: 11px; }
+.marca-texto { min-width: 0; }
 
 .marca-icone {
   width: 40px;
@@ -91,60 +145,65 @@ header h1 {
 }
 
 .subtitulo {
-  display: flex;
-  align-items: center;
-  gap: 7px;
   color: var(--suave);
   font-size: 0.78rem;
   margin: 2px 0 0;
 }
-
-/* Bolinha de estado da conexao com a API */
-.ponto {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  background: var(--primaria);
-  animation: pulsar 2.2s ease-in-out infinite;
-}
-.ponto.offline { background: var(--perigo); animation: none; }
-.ponto.carregando { background: var(--alerta); }
+.subtitulo.offline { color: var(--perigo); }
 
 @keyframes pulsar { 50% { opacity: 0.3; } }
 
 /* ---------- Abas ---------- */
 
-.abas {
-  display: flex;
-  gap: 2px;
-  margin-bottom: 18px;
-  padding: 3px;
-  border: 1px solid var(--borda);
-  background: var(--superficie);
-  border-radius: var(--raio);
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-}
-.abas::-webkit-scrollbar { display: none; }
+/* ---------- Menu ---------- */
 
-.abas button {
-  flex: 0 0 auto;
-  white-space: nowrap;
-  min-height: 38px;
-  padding: 8px 15px;
+.menu { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+
+.menu button {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  min-height: 42px;
+  padding: 9px 12px;
   border: none;
   background: transparent;
   color: var(--suave);
   border-radius: var(--raio-pequeno);
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   font-weight: 500;
+  text-align: left;
   cursor: pointer;
   transition: color var(--transicao), background var(--transicao);
 }
-.abas button:hover { color: var(--texto); }
-.abas button.ativa { color: var(--texto); background: var(--superficie-alta); }
+.menu button svg { flex-shrink: 0; }
+.menu button:hover { color: var(--texto); background: rgba(148, 163, 184, 0.08); }
+.menu button.ativa { color: var(--texto); background: var(--superficie-alta); }
+.menu button.ativa svg { color: var(--primaria); }
+
+/* Marca de alerta no item do Painel, visivel de qualquer secao */
+.selo {
+  width: 7px;
+  height: 7px;
+  margin-left: auto;
+  border-radius: 50%;
+  background: var(--alerta);
+  animation: pulsar 1.4s ease-in-out infinite;
+}
+
+@media (max-width: 860px) {
+  .menu {
+    flex-direction: row;
+    gap: 4px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+  }
+  .menu::-webkit-scrollbar { display: none; }
+  .menu button { width: auto; flex: 0 0 auto; white-space: nowrap; }
+  .menu button svg { display: none; }   /* no celular o texto basta */
+}
 
 /* ---------- Avisos ---------- */
 
@@ -309,13 +368,25 @@ header h1 {
 }
 .campo input::placeholder { color: var(--fraco); }
 
-footer {
-  text-align: center;
+.lateral footer {
   color: var(--fraco);
-  font-size: 0.72rem;
-  padding: 26px 0 12px;
-  margin-top: 8px;
+  font-size: 0.7rem;
+  line-height: 1.5;
+  padding-top: 14px;
   border-top: 1px solid var(--borda);
+}
+
+.rodape { display: none; }
+@media (max-width: 860px) {
+  .rodape {
+    display: block;
+    text-align: center;
+    color: var(--fraco);
+    font-size: 0.72rem;
+    padding: 26px 0 12px;
+    margin-top: 8px;
+    border-top: 1px solid var(--borda);
+  }
 }
 
 /* ---------- Filtros e medias do grafico ---------- */
@@ -385,15 +456,15 @@ footer {
 
 /* ---------- Seletor de ambiente ---------- */
 
+/* Na barra lateral o rotulo fica em cima do seletor: nao cabe lado a lado */
 .seletor {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 14px;
-  padding: 10px 12px;
-  border: 1px solid var(--borda);
-  background: var(--superficie);
-  border-radius: var(--raio);
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+}
+@media (max-width: 860px) {
+  .seletor { flex-direction: row; align-items: center; gap: 10px; }
 }
 .seletor label {
   color: var(--suave);
