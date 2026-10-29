@@ -2,6 +2,18 @@
 
 Camada de aplicação em FastAPI que conecta o dashboard ao FIWARE. Resolve o CORS (o Orion não devolve os headers necessários), traduz as respostas do FIWARE para JSON simples, guarda os triggers e roda a lógica de alerta.
 
+## Arquitetura
+
+![Arquitetura do sistema](docs/arquitetura.png)
+
+O diagrama parte do deploy do FIWARE Descomplicado usado em aula. O arquivo editável está em [`docs/arquitetura.drawio`](docs/arquitetura.drawio) (abre no draw.io).
+
+## Firmware
+
+O código do ESP32 e o circuito estão em [`firmware/`](firmware/) (`sketch.ino`, `diagram.json`, `libraries.txt`), exportados do projeto no Wokwi: <https://wokwi.com/projects/479223829887836161>.
+
+O IP do broker em `default_BROKER_MQTT` é o IP público da EC2 e muda a cada sessão do Learner Lab; atualize antes de simular.
+
 ## Rotas
 
 | Método | Rota | Descrição |
