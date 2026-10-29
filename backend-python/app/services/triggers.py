@@ -25,6 +25,10 @@ NOMES = {
 # Atuador que desliga quando o ambiente normaliza
 DESLIGA_ATUADOR = {"acon": "acoff", "umidon": "umidoff", "luz0": "luz1"}
 
+# Cada atuador so corrige um lado da faixa: o ar resfria, o umidificador
+# umidifica e apagar a luz reduz a luminosidade. Do outro lado so ha alerta.
+LADO_DO_ATUADOR = {"temperature": "acima", "humidity": "abaixo", "luminosity": "acima"}
+
 
 def ler(db: Session, dispositivo_id: int) -> Triggers:
     """Limites configurados de um dispositivo, com os padroes como reserva."""
@@ -147,13 +151,16 @@ async def avaliar_e_acionar(
 
     await comandos.enviar(db, dispositivo, comando, origem="automatico")
 
+    faixa: FaixaTrigger = getattr(triggers, anomalia)
+    valor = getattr(leitura, anomalia)
+    lado = "acima" if valor > faixa.maximo else "abaixo"
+
     # Alem de avisar, o sistema age: liga o atuador que corrige a anomalia
     atuador = fiware.ATUADOR_POR_GRANDEZA.get(anomalia)
-    if atuador:
+    if atuador and LADO_DO_ATUADOR.get(anomalia) == lado:
         await comandos.enviar(db, dispositivo, atuador, origem="automatico")
 
-    faixa: FaixaTrigger = getattr(triggers, anomalia)
-    eventos.abrir(db, dispositivo, anomalia, getattr(leitura, anomalia), faixa.minimo, faixa.maximo)
+    eventos.abrir(db, dispositivo, anomalia, valor, faixa.minimo, faixa.maximo)
 
     return ResultadoAlerta(
         anomalia=anomalia,
