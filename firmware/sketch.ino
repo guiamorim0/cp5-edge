@@ -3,7 +3,8 @@
   Grupo PentaCode - Turma 1ESPH - FIAP
 
   Sensores : LDR (luminosidade) + DHT (temperatura e umidade)
-  Saidas   : LED RGB (semaforo do ambiente: verde, amarelo ou vermelho)
+  Saidas   : LED azul da placa (GPIO 2, pisca enquanto houver qualquer alerta)
+             LED RGB (semaforo do ambiente: verde, amarelo ou vermelho)
              LED da lampada (intensidade por PWM)
              buzzer (alerta sonoro)
              display LCD 16x2 I2C (leituras e estado no proprio equipamento)
@@ -56,6 +57,7 @@ const int PINO_BUZZER = 4;   // Buzzer (alerta sonoro)
 const int PINO_AC = 18;      // Ar condicionado
 const int PINO_UMID = 19;    // Umidificador
 const int PINO_LAMPADA = 23; // Lampada do ambiente (PWM)
+const int PINO_LED_AZUL = 2;  // LED azul da propria placa: pisca em qualquer alerta
 
 const unsigned long INTERVALO_PUBLICACAO = 5000;  // Nao usar menos de 2000 (limite do DHT)
 const unsigned long INTERVALO_LCD = 1000;         // Atualizacao do display
@@ -224,6 +226,8 @@ void setup() {
     pinMode(PINO_AC, OUTPUT);
     pinMode(PINO_UMID, OUTPUT);
     pinMode(PINO_LAMPADA, OUTPUT);
+    pinMode(PINO_LED_AZUL, OUTPUT);
+    digitalWrite(PINO_LED_AZUL, LOW);
     corNormal();
     mostraEstadoLampada();
     digitalWrite(PINO_AC, LOW);
@@ -290,6 +294,7 @@ void atualizaAlerta() {
     if (millis() - ultimaPiscada >= (unsigned long)intervaloPiscada()) {
         ultimaPiscada = millis();
         ledAceso = !ledAceso;
+        digitalWrite(PINO_LED_AZUL, ledAceso ? HIGH : LOW);
 
         if (ledAceso) {
             corDoAlerta();
@@ -313,6 +318,7 @@ void ativaAlerta(TipoAlerta tipo) {
 void desativaAlerta() {
     alertaAtivo = NENHUM;
     noTone(PINO_BUZZER);
+    digitalWrite(PINO_LED_AZUL, LOW);
     corNormal();
     Serial.println("- Alerta desativado, valores normalizados");
     atualizaLCD();
