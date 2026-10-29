@@ -1,0 +1,201 @@
+{
+  "version": 1,
+  "author": "PentaCode - 1ESPH",
+  "editor": "wokwi",
+  "parts": [
+    {
+      "id": "bb",
+      "type": "wokwi-breadboard",
+      "top": 0,
+      "left": 0,
+      "attrs": {}
+    },
+    {
+      "id": "esp",
+      "type": "wokwi-esp32-devkit-v1",
+      "top": 470,
+      "left": 360,
+      "attrs": {}
+    },
+    {
+      "id": "rgb1",
+      "type": "wokwi-rgb-led",
+      "top": -185,
+      "left": 25,
+      "attrs": {
+        "common": "cathode"
+      }
+    },
+    {
+      "id": "ledAC",
+      "type": "wokwi-led",
+      "top": -165,
+      "left": 355,
+      "attrs": {
+        "color": "cyan",
+        "label": "Ar cond."
+      }
+    },
+    {
+      "id": "ledLamp",
+      "type": "wokwi-led",
+      "top": -165,
+      "left": 412,
+      "attrs": {
+        "color": "white",
+        "label": "Lampada"
+      }
+    },
+    {
+      "id": "ledUM",
+      "type": "wokwi-led",
+      "top": -165,
+      "left": 540,
+      "attrs": {
+        "color": "blue",
+        "label": "Umidific."
+      }
+    },
+    {
+      "id": "bz1",
+      "type": "wokwi-buzzer",
+      "top": 470,
+      "left": 760,
+      "attrs": {
+        "volume": "0.1"
+      }
+    },
+    {
+      "id": "rR",
+      "type": "wokwi-resistor",
+      "top": 78,
+      "left": 27.3,
+      "attrs": {
+        "value": "220"
+      }
+    },
+    {
+      "id": "rG",
+      "type": "wokwi-resistor",
+      "top": 78,
+      "left": 180.3,
+      "attrs": {
+        "value": "220"
+      }
+    },
+    {
+      "id": "rB",
+      "type": "wokwi-resistor",
+      "top": 78,
+      "left": 256.8,
+      "attrs": {
+        "value": "220"
+      }
+    },
+    {
+      "id": "rAC",
+      "type": "wokwi-resistor",
+      "top": 78,
+      "left": 363.9,
+      "attrs": {
+        "value": "220"
+      }
+    },
+    {
+      "id": "rLamp",
+      "type": "wokwi-resistor",
+      "top": 78,
+      "left": 455.7,
+      "attrs": {
+        "value": "220"
+      }
+    },
+    {
+      "id": "rUM",
+      "type": "wokwi-resistor",
+      "top": 78,
+      "left": 547.5,
+      "attrs": {
+        "value": "220"
+      }
+    },
+    {
+      "id": "ldr1",
+      "type": "wokwi-photoresistor-sensor",
+      "top": -330,
+      "left": -300,
+      "attrs": {}
+    },
+    {
+      "id": "dht1",
+      "type": "wokwi-dht22",
+      "top": -90,
+      "left": -340,
+      "attrs": {}
+    },
+    {
+      "id": "lcd1",
+      "type": "wokwi-lcd1602",
+      "top": -350,
+      "left": 700,
+      "attrs": {
+        "pins": "i2c"
+      }
+    }
+  ],
+  "connections": [
+    [ "esp:TX0", "$serialMonitor:RX", "", [  ] ],
+    [ "esp:RX0", "$serialMonitor:TX", "", [  ] ],
+    [ "esp:3V3", "bb:bp.20", "red", [ "v0" ] ],
+    [ "esp:GND.1", "bb:bn.24", "black", [ "v0" ] ],
+    [ "bb:bp.48", "bb:tp.48", "red", [ "v0" ] ],
+    [ "bb:bn.50", "bb:tn.50", "black", [ "v0" ] ],
+    [ "rgb1:R", "bb:2t.a", "magenta", [ "v0" ] ],
+    [ "rR:1", "bb:2t.c", "gray", [ "v0" ] ],
+    [ "rR:2", "bb:2b.h", "gray", [ "v0" ] ],
+    [ "esp:D25", "bb:2b.j", "magenta", [ "v34" ] ],
+    [ "rgb1:G", "bb:12t.a", "limegreen", [ "v0" ] ],
+    [ "rG:1", "bb:12t.c", "gray", [ "v0" ] ],
+    [ "rG:2", "bb:12b.h", "gray", [ "v0" ] ],
+    [ "esp:D26", "bb:12b.j", "limegreen", [ "v52" ] ],
+    [ "rgb1:B", "bb:17t.a", "blue", [ "v0" ] ],
+    [ "rB:1", "bb:17t.c", "gray", [ "v0" ] ],
+    [ "rB:2", "bb:17b.h", "gray", [ "v0" ] ],
+    [ "esp:D27", "bb:17b.j", "blue", [ "v70" ] ],
+    [ "rgb1:COM", "bb:7t.a", "black", [ "v0" ] ],
+    [ "bb:7t.b", "bb:tn.6", "black", [ "v0" ] ],
+    [ "ledAC:A", "bb:24t.a", "cyan", [ "v0" ] ],
+    [ "ledAC:C", "bb:28t.a", "black", [ "v0" ] ],
+    [ "bb:28t.b", "bb:tn.23", "black", [ "v0" ] ],
+    [ "rAC:1", "bb:24t.c", "gray", [ "v0" ] ],
+    [ "rAC:2", "bb:24b.h", "gray", [ "v0" ] ],
+    [ "esp:D18", "bb:24b.j", "cyan", [ "v88" ] ],
+    [ "ledLamp:A", "bb:30t.a", "white", [ "v0" ] ],
+    [ "ledLamp:C", "bb:34t.a", "black", [ "v0" ] ],
+    [ "bb:34t.b", "bb:tn.28", "black", [ "v0" ] ],
+    [ "rLamp:1", "bb:30t.c", "gray", [ "v0" ] ],
+    [ "rLamp:2", "bb:30b.h", "gray", [ "v0" ] ],
+    [ "esp:D23", "bb:30b.j", "white", [ "v88" ] ],
+    [ "ledUM:A", "bb:36t.a", "purple", [ "v0" ] ],
+    [ "ledUM:C", "bb:40t.a", "black", [ "v0" ] ],
+    [ "bb:40t.b", "bb:tn.33", "black", [ "v0" ] ],
+    [ "rUM:1", "bb:36t.c", "gray", [ "v0" ] ],
+    [ "rUM:2", "bb:36b.h", "gray", [ "v0" ] ],
+    [ "esp:D19", "bb:36b.j", "purple", [ "v106" ] ],
+    [ "bz1:2", "bb:47b.f", "yellow", [ "v0" ] ],
+    [ "bz1:1", "bb:51b.f", "black", [ "v0" ] ],
+    [ "esp:D4", "bb:47b.j", "yellow", [ "v142" ] ],
+    [ "bb:51b.j", "bb:bn.43", "black", [ "v0" ] ],
+    [ "ldr1:VCC", "bb:tp.3", "red", [ "v0" ] ],
+    [ "ldr1:GND", "bb:tn.2", "black", [ "v0" ] ],
+    [ "ldr1:AO", "esp:D34", "orange", [ "h-55" ] ],
+    [ "dht1:VCC", "bb:tp.9", "red", [ "v0" ] ],
+    [ "dht1:GND", "bb:tn.9", "black", [ "v0" ] ],
+    [ "dht1:SDA", "esp:D15", "white", [ "h-80" ] ],
+    [ "lcd1:VCC", "bb:tp.45", "red", [ "v0" ] ],
+    [ "lcd1:GND", "bb:tn.45", "black", [ "v0" ] ],
+    [ "lcd1:SDA", "esp:D21", "gold", [ "h70" ] ],
+    [ "lcd1:SCL", "esp:D22", "brown", [ "h95" ] ]
+  ],
+  "dependencies": {}
+}

@@ -53,23 +53,29 @@ def abrir(
     return evento
 
 
-def encerrar(db: Session, dispositivo_id: int) -> Evento | None:
-    """Fecha o incidente em aberto e calcula quanto tempo durou."""
-    evento = em_aberto(db, dispositivo_id)
-    if evento is None:
-        return None
+def encerrar(db: Session, dispositivo_id: int) -> list[Evento]:
+    """Fecha os incidentes em aberto e calcula quanto tempo cada um durou.
+
+    Normalmente ha no maximo um, mas fechar todos garante que nenhum fique
+    aberto para sempre (o que derrubaria o indice de saude sem motivo).
+    """
+    abertos = (
+        db.query(Evento)
+        .filter(Evento.dispositivo_id == dispositivo_id, Evento.fim.is_(None))
+        .all()
+    )
 
     fim = datetime.now(timezone.utc)
-    inicio = evento.inicio
-    # O SQLite devolve datas sem fuso: assume UTC para a subtracao funcionar
-    if inicio.tzinfo is None:
-        inicio = inicio.replace(tzinfo=timezone.utc)
+    for evento in abertos:
+        inicio = evento.inicio
+        # O SQLite devolve datas sem fuso: assume UTC para a subtracao funcionar
+        if inicio.tzinfo is None:
+            inicio = inicio.replace(tzinfo=timezone.utc)
+        evento.fim = fim
+        evento.duracao_segundos = int((fim - inicio).total_seconds())
 
-    evento.fim = fim
-    evento.duracao_segundos = int((fim - inicio).total_seconds())
     db.commit()
-    db.refresh(evento)
-    return evento
+    return abertos
 
 
 def contar_por_dispositivo(db: Session, dispositivo_id: int) -> dict[str, int]:

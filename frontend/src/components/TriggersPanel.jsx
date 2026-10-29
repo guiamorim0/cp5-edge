@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { getTriggers, salvarTriggers } from '../api'
 
 const GRANDEZAS = [
-  { chave: 'temperature', titulo: 'Temperatura', unidade: 'C', min: -10, max: 60 },
+  { chave: 'temperature', titulo: 'Temperatura', unidade: '°C', min: -10, max: 60 },
   { chave: 'humidity', titulo: 'Umidade', unidade: '%', min: 0, max: 100 },
   { chave: 'luminosity', titulo: 'Luminosidade', unidade: '%', min: 0, max: 100 },
 ]
@@ -20,7 +20,7 @@ export default function TriggersPanel({ status, dispositivoId, aoSalvar }) {
   useEffect(() => {
     getTriggers(dispositivoId)
       .then(setTriggers)
-      .catch(() => setMensagem('Nao foi possivel carregar os limites'))
+      .catch(() => setMensagem('Não foi possível carregar os limites'))
   }, [dispositivoId])
 
   function alterar(chave, campo, valor) {
@@ -45,50 +45,73 @@ export default function TriggersPanel({ status, dispositivoId, aoSalvar }) {
     }
   }
 
-  if (!triggers) return <div className="card"><p className="vazio">Carregando limites...</p></div>
+  if (!triggers) {
+    return (
+      <section className="bloco">
+        <p className="vazio">Carregando limites…</p>
+      </section>
+    )
+  }
 
   return (
     <>
-      {GRANDEZAS.map(({ chave, titulo, unidade, min, max }) => {
-        const faixa = triggers[chave]
-        const atual = status?.[chave]
-        const fora = atual != null && (atual < faixa.minimo || atual > faixa.maximo)
+      <section className="bloco">
+        <div className="bloco-cabeca">
+          <h3>Faixas aceitas</h3>
+          <span className="apoio">fora delas o alerta e o atuador são acionados</span>
+        </div>
+        <ul className="lista">
+          {GRANDEZAS.map(({ chave, titulo, unidade, min, max }) => {
+            const faixa = triggers[chave]
+            const atual = status?.[chave]
+            const fora = atual != null && (atual < faixa.minimo || atual > faixa.maximo)
 
-        return (
-          <div className={`card ${fora ? 'alerta' : ''}`} key={chave}>
-            <div className="linha">
-              <p className="rotulo">{titulo}</p>
-              <p className="atual">
-                atual: <strong>{atual ?? '--'}{unidade}</strong>
-              </p>
-            </div>
+            return (
+              <li key={chave}>
+                <div className={`limite ${fora ? 'fora' : ''}`} style={{ width: '100%' }}>
+                  <div>
+                    <p className="lista-nome">{titulo}</p>
+                    <p className="limite-atual">
+                      leitura atual <strong>{atual ?? '—'}{unidade}</strong>
+                    </p>
+                  </div>
 
-            {['minimo', 'maximo'].map((campo) => (
-              <div className="campo" key={campo}>
-                <label>{campo === 'minimo' ? 'Minimo' : 'Maximo'}</label>
-                <input
-                  type="range"
-                  min={min}
-                  max={max}
-                  value={faixa[campo]}
-                  onChange={(e) => alterar(chave, campo, e.target.value)}
-                />
-                <input
-                  type="number"
-                  inputMode="decimal"
-                  value={faixa[campo]}
-                  onChange={(e) => alterar(chave, campo, e.target.value)}
-                />
-              </div>
-            ))}
-          </div>
-        )
-      })}
+                  {['minimo', 'maximo'].map((campo) => {
+                    const id = `${chave}-${campo}`
+                    return (
+                      <div className="ajuste" key={campo}>
+                        <label htmlFor={id}>{campo === 'minimo' ? 'Mínimo' : 'Máximo'}</label>
+                        <input
+                          type="range"
+                          min={min}
+                          max={max}
+                          value={faixa[campo]}
+                          aria-label={`${titulo} ${campo}`}
+                          onChange={(e) => alterar(chave, campo, e.target.value)}
+                        />
+                        <input
+                          id={id}
+                          type="number"
+                          inputMode="decimal"
+                          value={faixa[campo]}
+                          onChange={(e) => alterar(chave, campo, e.target.value)}
+                        />
+                      </div>
+                    )
+                  })}
+                </div>
+              </li>
+            )
+          })}
+        </ul>
+      </section>
 
-      <button className="botao primario largo" disabled={salvando} onClick={salvar}>
-        {salvando ? 'Salvando...' : 'Salvar limites'}
-      </button>
-      {mensagem && <p className="mensagem">{mensagem}</p>}
+      <div className="acoes fim">
+        {mensagem && <p className="mensagem" role="status" style={{ margin: 0 }}>{mensagem}</p>}
+        <button className="botao primario" disabled={salvando} onClick={salvar}>
+          {salvando ? 'Salvando…' : 'Salvar limites'}
+        </button>
+      </div>
     </>
   )
 }

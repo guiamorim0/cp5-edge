@@ -14,8 +14,7 @@ const NOMES = {
   luminosity: 'Luminosidade',
 }
 
-const UNIDADES = { temperature: 'C', humidity: '%', luminosity: '%' }
-const CORES = { temperature: '#f97316', humidity: '#38bdf8', luminosity: '#facc15' }
+const UNIDADES = { temperature: '°C', humidity: '%', luminosity: '%' }
 
 // Os horarios sao gravados em UTC: converte para o fuso local
 function formatarData(valor) {
@@ -57,55 +56,77 @@ export default function EventsPanel({ dispositivoId }) {
 
   if (carregando) {
     return (
-      <div className="card">
-        <p className="vazio">Carregando historico...</p>
-      </div>
+      <section className="bloco">
+        <p className="vazio">Carregando histórico…</p>
+      </section>
     )
   }
 
   return (
     <>
-      <div className="card">
-        <p className="rotulo">Incidentes neste ambiente</p>
+      <section className="bloco">
         <div className="resumo">
           <div>
-            <p className="resumo-numero">{eventos.length}</p>
-            <p className="resumo-rotulo">total</p>
+            <p className="numero">{eventos.length}</p>
+            <span className="rotulo">incidentes</span>
           </div>
           {Object.keys(NOMES).map((chave) => (
             <div key={chave}>
-              <p className="resumo-numero" style={{ color: CORES[chave] }}>
-                {porGrandeza[chave] || 0}
-              </p>
-              <p className="resumo-rotulo">{NOMES[chave]}</p>
+              <p className="numero">{porGrandeza[chave] || 0}</p>
+              <span className="rotulo">{NOMES[chave]}</span>
             </div>
           ))}
         </div>
-      </div>
+      </section>
 
-      {eventos.length === 0 && <p className="vazio">Nenhum alerta disparado ate agora.</p>}
-
-      {eventos.map((evento) => (
-        <div className="card evento" key={evento.id}>
-          <div className="linha">
-            <div>
-              <p className="evento-titulo" style={{ color: CORES[evento.grandeza] }}>
-                {NOMES[evento.grandeza]}
-              </p>
-              <p className="evento-detalhe">
-                {evento.valor}
-                {UNIDADES[evento.grandeza]} fora da faixa de {evento.limite_minimo} a{' '}
-                {evento.limite_maximo}
-                {UNIDADES[evento.grandeza]}
-              </p>
-              <p className="evento-detalhe">{formatarData(evento.inicio)}</p>
-            </div>
-            <span className={`duracao ${evento.fim ? '' : 'ativo'}`}>
-              {formatarDuracao(evento.duracao_segundos)}
-            </span>
-          </div>
+      <section className="bloco">
+        <div className="bloco-cabeca">
+          <h3>Registro de incidentes</h3>
+          <span className="apoio">mais recentes primeiro</span>
         </div>
-      ))}
+
+        {eventos.length === 0 ? (
+          <p className="vazio">Nenhum alerta disparado até agora.</p>
+        ) : (
+          <table className="tabela">
+            <thead>
+              <tr>
+                <th>Grandeza</th>
+                <th>Início</th>
+                <th className="num">Leitura</th>
+                <th>Faixa</th>
+                <th>Duração</th>
+              </tr>
+            </thead>
+            <tbody>
+              {eventos.map((evento) => {
+                const unidade = UNIDADES[evento.grandeza]
+                return (
+                  <tr key={evento.id}>
+                    <td className="principal">{NOMES[evento.grandeza]}</td>
+                    <td data-rotulo="Início">{formatarData(evento.inicio)}</td>
+                    <td data-rotulo="Leitura" className="num">
+                      {evento.valor}
+                      {unidade}
+                    </td>
+                    <td data-rotulo="Faixa" className="secundario">
+                      {evento.limite_minimo} a {evento.limite_maximo}
+                      {unidade}
+                    </td>
+                    <td data-rotulo="Duração">
+                      {evento.fim ? (
+                        formatarDuracao(evento.duracao_segundos)
+                      ) : (
+                        <span className="status ativo">em andamento</span>
+                      )}
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        )}
+      </section>
     </>
   )
 }

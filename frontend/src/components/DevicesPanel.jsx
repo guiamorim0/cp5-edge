@@ -28,7 +28,7 @@ export default function DevicesPanel({ aoMudarLista }) {
       setDispositivos(lista)
       aoMudarLista?.(lista)
     } catch {
-      setMensagem('Nao foi possivel listar os ambientes')
+      setMensagem('Não foi possível listar os ambientes')
     }
   }, [aoMudarLista])
 
@@ -80,68 +80,97 @@ export default function DevicesPanel({ aoMudarLista }) {
 
   return (
     <>
-      <div className="card">
-        <p className="rotulo">Novo ambiente</p>
-
-        <div className="campo coluna">
-          <label>Nome do ambiente</label>
-          <input
-            value={novo.nome}
-            placeholder="Adega principal"
-            onChange={(e) => setNovo({ ...novo, nome: e.target.value })}
-          />
-        </div>
-        <div className="campo coluna">
-          <label>Local</label>
-          <input
-            value={novo.local}
-            placeholder="Subsolo, ala leste"
-            onChange={(e) => setNovo({ ...novo, local: e.target.value })}
-          />
-        </div>
-        <div className="campo coluna">
-          <label>Id do dispositivo</label>
-          <input
-            value={novo.device_id}
-            placeholder="lamp002"
-            onChange={(e) => preencherId(e.target.value)}
-          />
-        </div>
-        <div className="campo coluna">
-          <label>Entidade no FIWARE</label>
-          <input
-            value={novo.entity_name}
-            placeholder="urn:ngsi-ld:Lamp:002"
-            onChange={(e) => setNovo({ ...novo, entity_name: e.target.value })}
-          />
+      <section className="bloco">
+        <div className="bloco-cabeca">
+          <h3>Ambientes cadastrados</h3>
+          <span className="apoio">{dispositivos.length} no total</span>
         </div>
 
-        <button className="botao primario largo" disabled={ocupado} onClick={cadastrar}>
-          Cadastrar
-        </button>
-      </div>
+        {dispositivos.length === 0 ? (
+          <p className="vazio">Nenhum ambiente cadastrado.</p>
+        ) : (
+          <table className="tabela">
+            <thead>
+              <tr>
+                <th>Ambiente</th>
+                <th>Local</th>
+                <th>Dispositivo</th>
+                <th>Entidade no FIWARE</th>
+                <th className="acao"><span className="sr-only">Ações</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              {dispositivos.map((d) => (
+                <tr key={d.id}>
+                  <td className="principal">{d.nome}</td>
+                  <td data-rotulo="Local">{d.local || '—'}</td>
+                  <td data-rotulo="Dispositivo"><code>{d.device_id}</code></td>
+                  <td data-rotulo="Entidade"><code>{d.entity_name}</code></td>
+                  <td className="acao">
+                    <button className="botao discreto" disabled={ocupado} onClick={() => remover(d.id)}>
+                      Remover
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </section>
 
-      <p className="rotulo">Cadastrados ({dispositivos.length})</p>
-      {dispositivos.length === 0 && <p className="vazio">Nenhum ambiente cadastrado.</p>}
-
-      {dispositivos.map((d) => (
-        <div className="card" key={d.id}>
-          <div className="linha">
-            <div>
-              <p className="device-id">{d.nome}</p>
-              <p className="device-entidade">{d.local || 'sem local definido'}</p>
-              <p className="device-entidade">
-                {d.device_id} · {d.entity_name}
-              </p>
+      <section className="bloco">
+        <div className="bloco-cabeca">
+          <h3>Novo ambiente</h3>
+          <span className="apoio">provisiona no IoT Agent e cria o histórico</span>
+        </div>
+        <div className="bloco-corpo">
+          <div className="formulario">
+            <div className="campo">
+              <label htmlFor="amb-nome">Nome do ambiente</label>
+              <input
+                id="amb-nome"
+                value={novo.nome}
+                placeholder="Adega principal"
+                onChange={(e) => setNovo({ ...novo, nome: e.target.value })}
+              />
             </div>
-            <button className="botao perigo" disabled={ocupado} onClick={() => remover(d.id)}>
-              Remover
+            <div className="campo">
+              <label htmlFor="amb-local">Local</label>
+              <input
+                id="amb-local"
+                value={novo.local}
+                placeholder="Subsolo, ala leste"
+                onChange={(e) => setNovo({ ...novo, local: e.target.value })}
+              />
+            </div>
+            <div className="campo">
+              <label htmlFor="amb-device">Id do dispositivo</label>
+              <input
+                id="amb-device"
+                value={novo.device_id}
+                placeholder="lamp002"
+                onChange={(e) => preencherId(e.target.value)}
+              />
+            </div>
+            <div className="campo">
+              <label htmlFor="amb-entidade">Entidade no FIWARE</label>
+              <input
+                id="amb-entidade"
+                value={novo.entity_name}
+                placeholder="urn:ngsi-ld:Lamp:002"
+                onChange={(e) => setNovo({ ...novo, entity_name: e.target.value })}
+              />
+              <span className="ajuda">Preenchida a partir do id do dispositivo</span>
+            </div>
+          </div>
+          <div className="acoes fim" style={{ marginTop: 18 }}>
+            {mensagem && <p className="mensagem" role="status" style={{ margin: 0 }}>{mensagem}</p>}
+            <button className="botao primario" disabled={ocupado} onClick={cadastrar}>
+              Cadastrar
             </button>
           </div>
         </div>
-      ))}
-
-      {mensagem && <p className="mensagem">{mensagem}</p>}
+      </section>
     </>
   )
 }

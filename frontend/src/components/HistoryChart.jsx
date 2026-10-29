@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react'
 import {
   CartesianGrid,
-  Legend,
   Line,
   LineChart,
   ReferenceLine,
@@ -12,10 +11,14 @@ import {
 } from 'recharts'
 
 const SERIES = [
-  { chave: 'temperature', nome: 'Temperatura (C)', cor: '#f97316', eixo: 'esq' },
-  { chave: 'humidity', nome: 'Umidade (%)', cor: '#38bdf8', eixo: 'esq' },
-  { chave: 'luminosity', nome: 'Luminosidade (%)', cor: '#facc15', eixo: 'dir' },
+  { chave: 'temperature', nome: 'Temperatura (°C)', cor: '#6b1e2e', eixo: 'esq' },
+  { chave: 'humidity', nome: 'Umidade (%)', cor: '#4a6378', eixo: 'esq' },
+  { chave: 'luminosity', nome: 'Luminosidade (%)', cor: '#a8843f', eixo: 'dir' },
 ]
+
+// Mesmos tons do styles.css: papel, linha e tinta
+const LINHA = '#e2d8c6'
+const TINTA_FRACA = '#7d6e64'
 
 // O STH grava em UTC: converte para o fuso local antes de mostrar.
 function formatarHora(valor) {
@@ -56,10 +59,10 @@ export default function HistoryChart({ dados }) {
 
   if (!dados.length) {
     return (
-      <div className="card">
-        <p className="rotulo">Historico</p>
-        <p className="vazio">Aguardando as primeiras leituras do STH-Comet...</p>
-      </div>
+      <section className="bloco">
+        <div className="bloco-cabeca"><h3>Histórico</h3></div>
+        <p className="vazio">Aguardando as primeiras leituras do STH-Comet…</p>
+      </section>
     )
   }
 
@@ -67,20 +70,25 @@ export default function HistoryChart({ dados }) {
   const mostrarPontos = dados.length <= 30
 
   return (
-    <div className="card">
-      <div className="linha">
-        <p className="rotulo">Historico ({dados.length} leituras)</p>
-        <button className="link" onClick={() => setMostrarMedia((v) => !v)}>
-          {mostrarMedia ? 'ocultar medias' : 'mostrar medias'}
-        </button>
+    <section className="bloco">
+      <div className="bloco-cabeca">
+        <h3>Histórico</h3>
+        <span className="apoio">
+          últimas {dados.length} leituras ·{' '}
+          <button className="link" onClick={() => setMostrarMedia((v) => !v)}>
+            {mostrarMedia ? 'ocultar médias' : 'mostrar médias'}
+          </button>
+        </span>
       </div>
+      <div className="bloco-corpo">
 
       <div className="filtros">
         {SERIES.map(({ chave, nome, cor }) => (
           <button
             key={chave}
             className={`chip ${visiveis.includes(chave) ? 'ativo' : ''}`}
-            style={visiveis.includes(chave) ? { borderColor: cor, color: cor } : undefined}
+            style={{ '--cor': cor }}
+            aria-pressed={visiveis.includes(chave)}
             onClick={() => alternar(chave)}
           >
             {nome.split(' ')[0]}
@@ -91,15 +99,14 @@ export default function HistoryChart({ dados }) {
 
       <ResponsiveContainer width="100%" height={280}>
         <LineChart data={dados} margin={{ top: 8, right: 8, bottom: 0, left: -18 }}>
-          <CartesianGrid stroke="#1e293b" strokeDasharray="3 3" />
-          <XAxis dataKey="time" tickFormatter={formatarHora} stroke="#64748b" fontSize={11} minTickGap={40} />
-          <YAxis yAxisId="esq" stroke="#64748b" fontSize={11} />
-          <YAxis yAxisId="dir" orientation="right" stroke="#64748b" fontSize={11} domain={[0, 100]} />
+          <CartesianGrid stroke={LINHA} vertical={false} />
+          <XAxis dataKey="time" tickFormatter={formatarHora} stroke={LINHA} tick={{ fill: TINTA_FRACA }} fontSize={12} minTickGap={40} />
+          <YAxis yAxisId="esq" stroke={LINHA} tick={{ fill: TINTA_FRACA }} fontSize={12} />
+          <YAxis yAxisId="dir" orientation="right" stroke={LINHA} tick={{ fill: TINTA_FRACA }} fontSize={12} domain={[0, 100]} />
           <Tooltip
             labelFormatter={formatarHora}
-            contentStyle={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: 8 }}
+            contentStyle={{ background: '#fcfaf5', border: `1px solid ${LINHA}`, borderRadius: 3, color: '#2b211d' }}
           />
-          <Legend />
 
           {SERIES.filter(({ chave }) => visiveis.includes(chave)).map(({ chave, nome, cor, eixo }) => (
             <Line
@@ -109,8 +116,8 @@ export default function HistoryChart({ dados }) {
               dataKey={chave}
               name={nome}
               stroke={cor}
-              strokeWidth={2}
-              dot={mostrarPontos ? { r: 3, fill: cor } : false}
+              strokeWidth={1.75}
+              dot={mostrarPontos ? { r: 2.5, fill: cor, strokeWidth: 0 } : false}
               connectNulls
               isAnimationActive={false}
             />
@@ -125,13 +132,14 @@ export default function HistoryChart({ dados }) {
                   yAxisId={eixo}
                   y={medias[chave]}
                   stroke={cor}
-                  strokeDasharray="6 4"
-                  strokeOpacity={0.6}
+                  strokeDasharray="4 4"
+                  strokeOpacity={0.5}
                 />
               )
             )}
         </LineChart>
       </ResponsiveContainer>
-    </div>
+      </div>
+    </section>
   )
 }

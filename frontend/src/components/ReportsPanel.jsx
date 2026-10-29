@@ -7,11 +7,10 @@ import { getComandos, getRelatorio } from '../api'
  * O relatorio responde "como esta a operacao" e o log responde "o que o
  * sistema fez e quando", que e a evidencia de que a automacao agiu.
  */
-const CORES_SAUDE = (saude) => {
-  if (saude >= 90) return '#22c55e'
-  if (saude >= 70) return '#84cc16'
-  if (saude >= 50) return '#f97316'
-  return '#ef4444'
+const STATUS_SAUDE = (saude) => {
+  if (saude >= 70) return 'bom'
+  if (saude >= 50) return 'atencao'
+  return 'critico'
 }
 
 function formatarDuracao(segundos) {
@@ -55,9 +54,9 @@ export default function ReportsPanel({ dispositivoId }) {
 
   if (carregando) {
     return (
-      <div className="card">
-        <p className="vazio">Carregando relatorio...</p>
-      </div>
+      <section className="bloco">
+        <p className="vazio">Carregando relatório…</p>
+      </section>
     )
   }
 
@@ -65,76 +64,106 @@ export default function ReportsPanel({ dispositivoId }) {
     <>
       {relatorio && (
         <>
-          <div className="card">
-            <p className="rotulo">Visao geral da operacao</p>
+          <section className="bloco">
             <div className="resumo">
               <div>
-                <p className="resumo-numero">{relatorio.total_dispositivos}</p>
-                <p className="resumo-rotulo">ambientes</p>
+                <p className="numero">{relatorio.total_dispositivos}</p>
+                <span className="rotulo">ambientes</span>
               </div>
               <div>
-                <p className="resumo-numero">{relatorio.total_garrafas}</p>
-                <p className="resumo-rotulo">garrafas</p>
+                <p className="numero">{relatorio.total_garrafas}</p>
+                <span className="rotulo">garrafas</span>
               </div>
               <div>
-                <p className="resumo-numero">{relatorio.total_incidentes}</p>
-                <p className="resumo-rotulo">incidentes</p>
+                <p className="numero">{relatorio.total_incidentes}</p>
+                <span className="rotulo">incidentes</span>
               </div>
               <div>
-                <p className="resumo-numero" style={{ color: CORES_SAUDE(relatorio.saude_media) }}>
+                <p className={`numero ${relatorio.saude_media < 70 ? 'destaque' : ''}`}>
                   {relatorio.saude_media}
                 </p>
-                <p className="resumo-rotulo">saude media</p>
+                <span className="rotulo">saúde média</span>
               </div>
             </div>
-          </div>
+          </section>
 
-          {relatorio.linhas.map((linha) => (
-            <div className="card" key={linha.dispositivo_id}>
-              <div className="linha">
-                <div>
-                  <p className="device-id">{linha.nome}</p>
-                  <p className="device-entidade">{linha.local || linha.device_id}</p>
-                </div>
-                <span
-                  className="pill"
-                  style={{ color: CORES_SAUDE(linha.saude), borderColor: CORES_SAUDE(linha.saude) }}
-                >
-                  {linha.saude}
-                </span>
-              </div>
-              <p className="device-entidade espaco">
-                {linha.incidentes} incidentes · {formatarDuracao(linha.tempo_total_em_alerta)} em
-                alerta · {linha.garrafas} garrafas · {linha.comandos_enviados} comandos
-              </p>
+          <section className="bloco">
+            <div className="bloco-cabeca">
+              <h3>Por ambiente</h3>
+              <button className="link" onClick={baixarCsv}>Exportar CSV</button>
             </div>
-          ))}
-
-          <button className="botao primario largo" onClick={baixarCsv}>
-            Exportar relatorio em CSV
-          </button>
+            <table className="tabela">
+              <thead>
+                <tr>
+                  <th>Ambiente</th>
+                  <th>Saúde</th>
+                  <th className="num">Incidentes</th>
+                  <th className="num">Em alerta</th>
+                  <th className="num">Garrafas</th>
+                  <th className="num">Comandos</th>
+                </tr>
+              </thead>
+              <tbody>
+                {relatorio.linhas.map((linha) => (
+                  <tr key={linha.dispositivo_id}>
+                    <td className="principal">
+                      {linha.nome}
+                      <div className="secundario">{linha.local || linha.device_id}</div>
+                    </td>
+                    <td data-rotulo="Saúde">
+                      <span className={`status ${STATUS_SAUDE(linha.saude)}`}>{linha.saude}</span>
+                    </td>
+                    <td data-rotulo="Incidentes" className="num">{linha.incidentes}</td>
+                    <td data-rotulo="Em alerta" className="num">{formatarDuracao(linha.tempo_total_em_alerta)}</td>
+                    <td data-rotulo="Garrafas" className="num">{linha.garrafas}</td>
+                    <td data-rotulo="Comandos" className="num">{linha.comandos_enviados}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
         </>
       )}
 
-      <p className="rotulo espaco">Log de comandos</p>
-      {comandos.length === 0 && <p className="vazio">Nenhum comando enviado ainda.</p>}
-
-      {comandos.map((registro) => (
-        <div className="card compacto" key={registro.id}>
-          <div className="linha">
-            <div>
-              <p className="comando-nome">
-                {registro.comando}
-                {!registro.sucesso && <span className="falhou"> falhou</span>}
-              </p>
-              <p className="device-entidade">{formatarMomento(registro.momento)}</p>
-            </div>
-            <span className={`pill ${registro.origem === 'automatico' ? 'auto' : ''}`}>
-              {registro.origem}
-            </span>
-          </div>
+      <section className="bloco">
+        <div className="bloco-cabeca">
+          <h3>Log de comandos</h3>
+          <span className="apoio">tudo que foi enviado ao dispositivo</span>
         </div>
-      ))}
+
+        {comandos.length === 0 ? (
+          <p className="vazio">Nenhum comando enviado ainda.</p>
+        ) : (
+          <table className="tabela">
+            <thead>
+              <tr>
+                <th>Comando</th>
+                <th>Momento</th>
+                <th>Origem</th>
+                <th>Resultado</th>
+              </tr>
+            </thead>
+            <tbody>
+              {comandos.map((registro) => (
+                <tr key={registro.id}>
+                  <td className="principal"><code>{registro.comando}</code></td>
+                  <td data-rotulo="Momento">{formatarMomento(registro.momento)}</td>
+                  <td data-rotulo="Origem">
+                    {registro.origem === 'automatico' ? 'Automático' : 'Manual'}
+                  </td>
+                  <td data-rotulo="Resultado">
+                    {registro.sucesso ? (
+                      <span className="status bom">enviado</span>
+                    ) : (
+                      <span className="status critico" title={registro.detalhe}>falhou</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </section>
     </>
   )
 }
