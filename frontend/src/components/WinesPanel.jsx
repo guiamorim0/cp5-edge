@@ -8,12 +8,13 @@ import { cadastrarVinho, getVinhos, movimentarVinho, removerVinho } from '../api
  * ambiente. E essa ligacao que da sentido ao monitoramento: nao e so "a
  * temperatura subiu", e sim "subiu onde estao 240 garrafas de Cabernet 2018".
  */
-const CORES_SAUDE = (saude) => {
-  if (saude >= 90) return '#22c55e'
-  if (saude >= 70) return '#84cc16'
-  if (saude >= 50) return '#f97316'
-  return '#ef4444'
+const STATUS_SAUDE = (saude) => {
+  if (saude >= 70) return 'bom'
+  if (saude >= 50) return 'atencao'
+  return 'critico'
 }
+
+const TIPOS = { tinto: 'Tinto', branco: 'Branco', rose: 'Rosé', espumante: 'Espumante' }
 
 const VAZIO = { nome: '', tipo: 'tinto', safra: '', quantidade: 0 }
 
@@ -27,7 +28,7 @@ export default function WinesPanel({ dispositivoId }) {
     try {
       setVinhos(await getVinhos(dispositivoId))
     } catch {
-      setMensagem('Nao foi possivel carregar o estoque')
+      setMensagem('Não foi possível carregar o estoque')
     }
   }, [dispositivoId])
 
@@ -84,91 +85,121 @@ export default function WinesPanel({ dispositivoId }) {
 
   return (
     <>
-      <div className="card">
-        <p className="rotulo">Novo lote</p>
-        <div className="campo coluna">
-          <label>Nome do vinho</label>
-          <input
-            value={novo.nome}
-            placeholder="Cabernet Sauvignon Reserva"
-            onChange={(e) => setNovo({ ...novo, nome: e.target.value })}
-          />
+      <section className="bloco">
+        <div className="bloco-cabeca">
+          <h3>Estoque</h3>
+          <span className="apoio">
+            {vinhos.length} {vinhos.length === 1 ? 'lote' : 'lotes'} · {garrafas} garrafas
+          </span>
         </div>
-        <div className="campo">
-          <label>Tipo</label>
-          <select value={novo.tipo} onChange={(e) => setNovo({ ...novo, tipo: e.target.value })}>
-            <option value="tinto">Tinto</option>
-            <option value="branco">Branco</option>
-            <option value="rose">Rose</option>
-            <option value="espumante">Espumante</option>
-          </select>
-        </div>
-        <div className="campo">
-          <label>Safra</label>
-          <input
-            type="number"
-            inputMode="numeric"
-            value={novo.safra}
-            placeholder="2018"
-            onChange={(e) => setNovo({ ...novo, safra: e.target.value })}
-          />
-        </div>
-        <div className="campo">
-          <label>Garrafas</label>
-          <input
-            type="number"
-            inputMode="numeric"
-            value={novo.quantidade}
-            onChange={(e) => setNovo({ ...novo, quantidade: e.target.value })}
-          />
-        </div>
-        <button className="botao primario largo" disabled={ocupado} onClick={cadastrar}>
-          Cadastrar lote
-        </button>
-      </div>
 
-      <div className="linha espacado">
-        <p className="rotulo">
-          {vinhos.length} {vinhos.length === 1 ? 'lote' : 'lotes'}
-        </p>
-        <p className="rotulo">{garrafas} garrafas</p>
-      </div>
+        {vinhos.length === 0 ? (
+          <p className="vazio">Nenhum vinho cadastrado neste ambiente.</p>
+        ) : (
+          <table className="tabela">
+            <thead>
+              <tr>
+                <th>Rótulo</th>
+                <th>Tipo</th>
+                <th className="num">Safra</th>
+                <th>Garrafas</th>
+                <th>Saúde</th>
+                <th className="acao"><span className="sr-only">Ações</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              {vinhos.map((vinho) => (
+                <tr key={vinho.id}>
+                  <td className="principal">{vinho.nome}</td>
+                  <td data-rotulo="Tipo">{TIPOS[vinho.tipo] || vinho.tipo || '—'}</td>
+                  <td data-rotulo="Safra" className="num">{vinho.safra || '—'}</td>
+                  <td data-rotulo="Garrafas">
+                    <span className="estoque">
+                      <button
+                        disabled={ocupado}
+                        aria-label={`Retirar uma garrafa de ${vinho.nome}`}
+                        onClick={() => movimentar(vinho.id, -1)}
+                      >
+                        −
+                      </button>
+                      <span className="estoque-numero">{vinho.quantidade}</span>
+                      <button
+                        disabled={ocupado}
+                        aria-label={`Adicionar uma garrafa de ${vinho.nome}`}
+                        onClick={() => movimentar(vinho.id, 1)}
+                      >
+                        +
+                      </button>
+                    </span>
+                  </td>
+                  <td data-rotulo="Saúde">
+                    <span className={`status ${STATUS_SAUDE(vinho.saude)}`}>{vinho.saude}</span>
+                  </td>
+                  <td className="acao">
+                    <button className="botao discreto" disabled={ocupado} onClick={() => remover(vinho.id)}>
+                      Remover
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </section>
 
-      {vinhos.length === 0 && <p className="vazio">Nenhum vinho cadastrado neste ambiente.</p>}
-
-      {vinhos.map((vinho) => (
-        <div className="card" key={vinho.id}>
-          <div className="linha">
-            <div>
-              <p className="device-id">{vinho.nome}</p>
-              <p className="device-entidade">
-                {vinho.tipo}
-                {vinho.safra ? ` · ${vinho.safra}` : ''}
-              </p>
+      <section className="bloco">
+        <div className="bloco-cabeca">
+          <h3>Novo lote</h3>
+        </div>
+        <div className="bloco-corpo">
+          <div className="formulario quatro">
+            <div className="campo inteiro-celular">
+              <label htmlFor="vinho-nome">Nome do vinho</label>
+              <input
+                id="vinho-nome"
+                value={novo.nome}
+                placeholder="Cabernet Sauvignon Reserva"
+                onChange={(e) => setNovo({ ...novo, nome: e.target.value })}
+              />
             </div>
-            <span className="pill" style={{ color: CORES_SAUDE(vinho.saude), borderColor: CORES_SAUDE(vinho.saude) }}>
-              saude {vinho.saude}
-            </span>
+            <div className="campo">
+              <label htmlFor="vinho-tipo">Tipo</label>
+              <select id="vinho-tipo" value={novo.tipo} onChange={(e) => setNovo({ ...novo, tipo: e.target.value })}>
+                {Object.entries(TIPOS).map(([valor, rotulo]) => (
+                  <option key={valor} value={valor}>{rotulo}</option>
+                ))}
+              </select>
+            </div>
+            <div className="campo">
+              <label htmlFor="vinho-safra">Safra</label>
+              <input
+                id="vinho-safra"
+                type="number"
+                inputMode="numeric"
+                value={novo.safra}
+                placeholder="2018"
+                onChange={(e) => setNovo({ ...novo, safra: e.target.value })}
+              />
+            </div>
+            <div className="campo">
+              <label htmlFor="vinho-qtd">Garrafas</label>
+              <input
+                id="vinho-qtd"
+                type="number"
+                inputMode="numeric"
+                value={novo.quantidade}
+                onChange={(e) => setNovo({ ...novo, quantidade: e.target.value })}
+              />
+            </div>
           </div>
-
-          <div className="linha espacado">
-            <div className="estoque">
-              <button className="botao" disabled={ocupado} onClick={() => movimentar(vinho.id, -1)}>
-                −
-              </button>
-              <span className="estoque-numero">{vinho.quantidade}</span>
-              <button className="botao" disabled={ocupado} onClick={() => movimentar(vinho.id, 1)}>
-                +
-              </button>
-            </div>
-            <button className="botao perigo" disabled={ocupado} onClick={() => remover(vinho.id)}>
-              Remover
+          <div className="acoes fim" style={{ marginTop: 18 }}>
+            {mensagem && <p className="mensagem" role="status" style={{ margin: 0 }}>{mensagem}</p>}
+            <button className="botao primario" disabled={ocupado} onClick={cadastrar}>
+              Cadastrar lote
             </button>
           </div>
         </div>
-      ))}
-
-      {mensagem && <p className="mensagem">{mensagem}</p>}
+      </section>
     </>
   )
 }

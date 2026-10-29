@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import ActuatorPanel from './components/ActuatorPanel'
+import AlertTestPanel from './components/AlertTestPanel'
 import DeviceSelector from './components/DeviceSelector'
 import DevicesPanel from './components/DevicesPanel'
 import EventsPanel from './components/EventsPanel'
@@ -10,7 +11,6 @@ import {
   IconePainel, IconeRelatorios, IconeSimulacao, IconeTemperatura, IconeUmidade,
   IconeVinhos,
 } from './components/Icons'
-import LampControl from './components/LampControl'
 import ReportsPanel from './components/ReportsPanel'
 import SensorCard from './components/SensorCard'
 import SimulationPanel from './components/SimulationPanel'
@@ -23,12 +23,12 @@ import { useMonitoramento } from './hooks/useMonitoramento'
 // Com o menu de lado sobra espaco para isso, e quem abre o app pela primeira
 // vez nao precisa clicar em tudo para descobrir.
 const SECOES = [
-  { id: 'dashboard',  titulo: 'Painel',      icone: IconePainel,     resumo: 'Leituras ao vivo, controle dos atuadores e historico' },
+  { id: 'dashboard',  titulo: 'Painel',      icone: IconePainel,     resumo: 'Leituras ao vivo, controle dos atuadores e histórico' },
   { id: 'triggers',   titulo: 'Limites',     icone: IconeLimites,    resumo: 'Faixa ideal de cada grandeza para este ambiente' },
-  { id: 'vinhos',     titulo: 'Vinhos',      icone: IconeVinhos,     resumo: 'Estoque da adega e indice de saude de cada rotulo' },
+  { id: 'vinhos',     titulo: 'Vinhos',      icone: IconeVinhos,     resumo: 'Estoque da adega e índice de saúde de cada rótulo' },
   { id: 'eventos',    titulo: 'Eventos',     icone: IconeEventos,    resumo: 'Registro das anomalias e quanto tempo cada uma durou' },
-  { id: 'relatorios', titulo: 'Relatorios',  icone: IconeRelatorios, resumo: 'Resumo do periodo e log dos comandos enviados' },
-  { id: 'simulacao',  titulo: 'Simulacao',   icone: IconeSimulacao,  resumo: 'Provoca uma anomalia real para demonstrar os alertas' },
+  { id: 'relatorios', titulo: 'Relatórios',  icone: IconeRelatorios, resumo: 'Resumo do período e log dos comandos enviados' },
+  { id: 'simulacao',  titulo: 'Simulação',   icone: IconeSimulacao,  resumo: 'Provoca uma anomalia real para demonstrar os alertas' },
   { id: 'devices',    titulo: 'Ambientes',   icone: IconeAmbientes,  resumo: 'Cadastro das adegas e provisionamento no FIWARE' },
 ]
 
@@ -76,22 +76,24 @@ export default function App() {
     <div className="layout">
       {/* Menu fixo a esquerda no desktop; vira uma faixa no topo no celular */}
       <aside className="lateral">
-        <div className="marca">
-          <div className="marca-icone"><IconeMarca /></div>
-          <div className="marca-texto">
-            <h1>Vinherias</h1>
-            {/* Sem conexao fica em vermelho: e o unico estado que exige acao */}
-            <p className={`subtitulo ${erro ? 'offline' : ''}`}>
-              {erro ? 'Sem conexao' : carregando ? 'Carregando' : 'Ao vivo'}
-            </p>
+        <div className="lateral-topo">
+          <div className="marca">
+            <div className="marca-icone"><IconeMarca width={26} height={26} /></div>
+            <div className="marca-texto">
+              <h1>Vinherias</h1>
+              {/* Sem conexao fica em bordo: e o unico estado que exige acao */}
+              <p className={`subtitulo ${erro ? 'offline' : ''}`}>
+                {erro ? 'Sem conexão' : carregando ? 'Carregando' : 'Ao vivo'}
+              </p>
+            </div>
           </div>
-        </div>
 
-        <DeviceSelector
-          dispositivos={dispositivos}
-          selecionado={dispositivoId}
-          aoSelecionar={setDispositivoId}
-        />
+          <DeviceSelector
+            dispositivos={dispositivos}
+            selecionado={dispositivoId}
+            aoSelecionar={setDispositivoId}
+          />
+        </div>
 
         <nav className="menu">
           {SECOES.map(({ id, titulo, icone: Icone }) => (
@@ -120,34 +122,46 @@ export default function App() {
 
         {/* Os avisos aparecem em qualquer secao: o polling nao para ao trocar de tela */}
         {alertaAtivo && (
-          <div className="faixa-alerta">{NOMES_ALERTA[alertaAtivo] || `Alerta: ${alertaAtivo}`}</div>
+          <div className="faixa-alerta" role="alert">{NOMES_ALERTA[alertaAtivo] || `Alerta: ${alertaAtivo}`}</div>
         )}
-        {erro && <div className="faixa-erro">{erro}</div>}
+        {erro && <div className="faixa-erro" role="status">{erro}</div>}
 
         {semDispositivos && aba !== 'devices' && (
-          <div className="card">
-            <p className="rotulo">Nenhum ambiente cadastrado</p>
-            <p className="explicacao">
-              Cadastre o primeiro ambiente na secao Ambientes. Ele sera provisionado no
-              FIWARE com todos os comandos e ja nasce com os limites de adega.
-            </p>
-            <button className="botao primario largo" onClick={() => setAba('devices')}>
-              Ir para Ambientes
-            </button>
-          </div>
+          <section className="bloco">
+            <div className="bloco-cabeca"><h3>Nenhum ambiente cadastrado</h3></div>
+            <div className="bloco-corpo">
+              <p className="explicacao">
+                Cadastre o primeiro ambiente na seção Ambientes. Ele será provisionado no
+                FIWARE com todos os comandos e já nasce com os limites de adega.
+              </p>
+              <button className="botao primario" onClick={() => setAba('devices')}>
+                Ir para Ambientes
+              </button>
+            </div>
+          </section>
         )}
 
         <main>
           {aba === 'dashboard' && !semDispositivos && (
             <>
-              <HealthBadge saude={saude} />
-              <div className="cards">
-                <SensorCard titulo="Temperatura" valor={status?.temperature} unidade="C" faixa={triggers?.temperature} icone={<IconeTemperatura />} />
-                <SensorCard titulo="Umidade" valor={status?.humidity} unidade="%" faixa={triggers?.humidity} icone={<IconeUmidade />} />
-                <SensorCard titulo="Luminosidade" valor={status?.luminosity} unidade="%" faixa={triggers?.luminosity} icone={<IconeLuminosidade />} />
+              {/* Um quadro so para as tres leituras: lidas juntas, como num instrumento */}
+              <section className="bloco">
+                <div className="bloco-cabeca">
+                  <h3>Leituras do ambiente</h3>
+                  <HealthBadge saude={saude} />
+                </div>
+                <div className="leituras">
+                  <SensorCard titulo="Temperatura" valor={status?.temperature} unidade="°C" faixa={triggers?.temperature} icone={<IconeTemperatura width={16} height={16} />} />
+                  <SensorCard titulo="Umidade" valor={status?.humidity} unidade="%" faixa={triggers?.humidity} icone={<IconeUmidade width={16} height={16} />} />
+                  <SensorCard titulo="Luminosidade" valor={status?.luminosity} unidade="%" faixa={triggers?.luminosity} icone={<IconeLuminosidade width={16} height={16} />} />
+                </div>
+              </section>
+
+              <div className="grade-2">
+                <ActuatorPanel status={status} dispositivoId={dispositivoId} aoMudar={atualizar} />
+                <AlertTestPanel dispositivoId={dispositivoId} aoMudar={atualizar} />
               </div>
-              <LampControl status={status} dispositivoId={dispositivoId} aoMudar={atualizar} />
-              <ActuatorPanel dispositivoId={dispositivoId} aoMudar={atualizar} />
+
               <HistoryChart dados={historico} />
             </>
           )}
